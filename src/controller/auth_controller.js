@@ -28,3 +28,17 @@ catch (error){
 
 
 }
+async function loginuser(req,res){
+    const {email,username,password}=req.body;
+    const user=await userModel.findOne({$or:[{email},{username}]});
+    if(!user){
+        return res.status(400).json({message:"User not found"});
+    }
+    if(user.password!==password){
+        return res.status(400).json({message:"Invalid password"});
+    }
+    const token=jsonwebtoken.sign({id:user._id,role:user.role},process.env.JWT_SECRET,{expiresIn:'1h'});
+    const cokkie=res.cookie('token',token,{httpOnly:true,maxAge:3600000});
+    return res.status(200).json({message:"User logged in successfully",user:user});
+}
+module.exports={registerUser,loginuser};
